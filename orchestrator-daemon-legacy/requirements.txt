@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+psutil
+pydantic
+httpx
+wmi
+python-dotenv
+chromadb
+sentence-transformers
+pathspec
