@@ -17,3 +17,11 @@ Follow standard installation steps for this language.
 ## Usage
 Instructions on how to run the project.
 
+
+## 🐳 Docker Support
+
+Run the system seamlessly using Docker:
+
+```bash
+docker compose up --build
+```
