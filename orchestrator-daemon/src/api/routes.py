@@ -11,7 +11,20 @@ from ..indexing.chunker import chunk_file
 from ..vector.store import VectorStore
 
 router = APIRouter()
-vector_store = VectorStore() # Global instance (singleton-ish)
+
+# Heavy embedding deps (chromadb + sentence-transformers/torch) are optional
+# for booting the API. The VectorStore singleton is created lazily, only when
+# an embedding endpoint is actually called; otherwise a 503 is returned.
+_vector_store = None
+
+def get_vector_store():
+    global _vector_store
+    if _vector_store is None:
+        try:
+            _vector_store = VectorStore()
+        except ImportError as e:
+            raise HTTPException(status_code=503, detail=str(e))
+    return _vector_store
 
 class IndexRequest(BaseModel):
     path: str
@@ -23,6 +36,11 @@ class QueryRequest(BaseModel):
 def background_index_project(path: str):
     # This should be robust, handle errors, logs, etc.
     print(f"Starting index for {path}")
+    try:
+        vector_store = get_vector_store()
+    except HTTPException as e:
+        print(f"Indexing aborted: {e.detail}")
+        return
     chunks_batch = []
     
     for filepath in crawl_project(path):
@@ -51,6 +69,7 @@ def index_project_endpoint(req: IndexRequest, bg_tasks: BackgroundTasks):
 
 @router.post("/project/query")
 def query_project_endpoint(req: QueryRequest):
+    vector_store = get_vector_store()
     results = vector_store.query_similar(req.query, n_results=req.n_results)
     return {"results": results}
 
@@ -63,7 +82,11 @@ class AgentTaskRequest(BaseModel):
 
 @router.post("/agent/task")
 def agent_task_endpoint(req: AgentTaskRequest):
-    response = coordinator.route_task(req.task)
+    try:
+        response = coordinator.route_task(req.task)
+    except ImportError as e:
+        # Embedding deps (torch/chromadb) are needed for RAG context retrieval
+        raise HTTPException(status_code=503, detail=str(e))
     return {
         "agent": response.agent_name,
         "content": response.content,

@@ -1,10 +1,27 @@
-import chromadb
-from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
+"""Vector store backed by ChromaDB + sentence-transformers.
+
+Heavy embedding dependencies (chromadb, sentence-transformers/torch) are
+imported LAZILY inside VectorStore.__init__, so importing this module never
+requires them. They are only needed when VectorStore is actually constructed
+(by the /project/index, /project/query, /agent/task endpoints).
+"""
 from typing import List, Dict
+
+EMBED_DEPS_ERROR = (
+    "Embedding dependencies are not installed (chromadb, sentence-transformers, torch). "
+    "Install them with: pip install -r requirements-embeddings.txt"
+)
+
 
 class VectorStore:
     def __init__(self, persist_path: str = "./vector_db"):
+        try:
+            import chromadb
+            from chromadb.config import Settings
+            from sentence_transformers import SentenceTransformer
+        except ImportError as e:
+            raise ImportError(f"{EMBED_DEPS_ERROR} (original error: {e})") from e
+
         self.client = chromadb.PersistentClient(path=persist_path, settings=Settings(anonymized_telemetry=False))
         self.collection = self.client.get_or_create_collection("project_code")
         # Load local model (CPU optimized)

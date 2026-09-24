@@ -6,13 +6,21 @@ from ..vector.store import VectorStore
 
 class AgentCoordinator:
     def __init__(self):
-        self.vector_store = VectorStore()
+        # VectorStore is constructed lazily: building it needs chromadb +
+        # sentence-transformers (torch), which are optional for booting the API.
+        self._vector_store = None
         self.agents: Dict[str, BaseAgent] = {
             "reader": CodeReaderAgent(),
             "refactor": RefactorAgent(),
             "test": TestWriterAgent(),
             "doc": DocWriterAgent()
         }
+
+    @property
+    def vector_store(self):
+        if self._vector_store is None:
+            self._vector_store = VectorStore()
+        return self._vector_store
 
     def _classify_task(self, task: str) -> str:
         """

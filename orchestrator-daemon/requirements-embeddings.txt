@@ -1,0 +1,5 @@
+# Optional: embedding/RAG dependencies (heavy; torch-based).
+# Needed only for the /project/index, /project/query, and /agent/task endpoints.
+# The API boots and serves all other endpoints without these.
+chromadb>=0.4.0
+sentence-transformers>=2.2.0

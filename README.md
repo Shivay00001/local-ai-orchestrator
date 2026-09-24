@@ -39,7 +39,21 @@ Follow standard installation steps for `Python` to set up the project locally:
 
 ## 💻 Usage
 
-Run the project using standard execution commands for `Python`. Ensure all environment variables and configurations are set prior to execution.
+The orchestrator daemon is a FastAPI service that binds **127.0.0.1 only** (by design — local, private).
+
+### Dependencies
+
+```bash
+cd orchestrator-daemon
+pip install -r requirements.txt                 # core API (light)
+pip install -r requirements-embeddings.txt      # OPTIONAL: heavy embedding/RAG deps (chromadb, sentence-transformers, torch)
+```
+
+**Embedding endpoints need torch.** The `/project/index`, `/project/query`, and `/agent/task`
+endpoints use ChromaDB + sentence-transformers (torch) for RAG. These are loaded *lazily*:
+the API boots and serves all other endpoints (`/health`, `/ollama/*`, `/system/hardware`,
+`/models/recommended`, …) without them. If you call an embedding endpoint without the optional
+deps installed, it returns **HTTP 503** with an install hint instead of crashing at startup.
 
 ## 🤝 Contributing
 
