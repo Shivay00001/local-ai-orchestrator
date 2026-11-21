@@ -1,5 +1,7 @@
 # Local Ai Orchestrator
 
+Built by [VisionQuantech](https://visionquantech.com) — AI agents, apps & tools for small businesses.
+
 Flutter desktop UI for local AI agent orchestration and hardware management
 
 ![Language](https://img.shields.io/badge/Language-Python-blue)
